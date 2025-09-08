@@ -5,16 +5,73 @@ const createAssessment = async (req, res) => {
         const { title, description, questions, status, classification } = req.body;
 
         if (!title || !questions || !Array.isArray(questions) || questions.length === 0) {
-            return res.status(400).json({ success: false, message: "Title and questions are required" });
+            return res.status(400).json({ 
+                success: false, 
+                message: "Title and questions are required" 
+            });
         }
 
-        // Save all questions first
-        const savedQuestions = await Question.insertMany(questions);
+        const errors = [];
+        const validQuestions = [];
+
+        // Validate each question
+        questions.forEach((q, index) => {
+            try {
+                if (!q.type || !q.question_text) {
+                    errors.push({ index, reason: "Missing type or question text" });
+                    return;
+                }
+
+                if (!q.options || !Array.isArray(q.options) || q.options.length === 0) {
+                    errors.push({ index, reason: "Options must be a non-empty array" });
+                    return;
+                }
+
+                if (q.correct_option === undefined || q.correct_option === null || 
+                    (Array.isArray(q.correct_option) && q.correct_option.length === 0)) {
+                    errors.push({ index, reason: "Missing or invalid correct_option" });
+                    return;
+                }
+
+                // Ensure correct_option index is valid
+                if (Array.isArray(q.correct_option)) {
+                    const invalid = q.correct_option.some(i => i < 0 || i >= q.options.length);
+                    if (invalid) {
+                        errors.push({ index, reason: "Invalid correct_option indices" });
+                        return;
+                    }
+                } else if (q.correct_option < 0 || q.correct_option >= q.options.length) {
+                    errors.push({ index, reason: "Invalid correct_option index" });
+                    return;
+                }
+
+                validQuestions.push({
+                    type: q.type.trim(),
+                    question_text: q.question_text.trim(),
+                    file_url: q.file_url?.trim() || null,
+                    options: q.options,
+                    correct_option: q.correct_option,
+                });
+            } catch (questionError) {
+                errors.push({ index, reason: `Question validation failed: ${questionError.message}` });
+            }
+        });
+
+        if (validQuestions.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: "No valid questions found",
+                errors
+            });
+        }
+
+        // Save valid questions
+        const savedQuestions = await Question.insertMany(validQuestions, { ordered: false });
 
         // Create assessment
         const assessment = new Assessment({
             title,
-            description,
+            description: description || "",
             questions: savedQuestions.map(q => q._id),
             created_by: req.user?._id,
             status,
@@ -27,6 +84,7 @@ const createAssessment = async (req, res) => {
             success: true,
             message: "Assessment created successfully",
             data: assessment,
+            errors // return invalid question info if any
         });
 
     } catch (error) {
@@ -36,11 +94,10 @@ const createAssessment = async (req, res) => {
 };
 
 
+
 const csv = require("csv-parser");
-const OrganizationContent = require("../../models/contentOrganization.model");
 const fs = require("fs");
 
-// Upload and create assessment from CSV
 const uploadAssessmentCSV = async (req, res) => {
     try {
         if (!req.file) {
@@ -49,6 +106,7 @@ const uploadAssessmentCSV = async (req, res) => {
 
         const file = req.file;
         const questions = [];
+        const errors = [];
 
         // Map letter answers to index
         const letterToIndex = { A: 0, B: 1, C: 2, D: 3, E: 4 };
@@ -56,64 +114,123 @@ const uploadAssessmentCSV = async (req, res) => {
         fs.createReadStream(file.path)
             .pipe(csv())
             .on("data", (row) => {
-                // console.log(row)
-                const options = [
-                    row["Option A"],
-                    row["Option B"],
-                    row["Option C"],
-                    row["Option D"],
-                    row["Option E"]
-                ].filter(Boolean);
-                const answer = row["Answer"]?.trim().toUpperCase();
-
-                let correct_option = null;
-                if (answer) {
-                    // If multiple answers separated by commas
-                    if (answer.includes(",")) {
-                        correct_option = answer.split(",").map(a => letterToIndex[a.trim()] ?? null).filter(a => a !== null);
-                    } else {
-                        // Single answer
-                        correct_option = letterToIndex[answer] ?? null;
+                try {
+                    // Validate required fields
+                    if (!row["Type of Question"] || !row["Question"]) {
+                        errors.push({ row, reason: "Missing Type of Question or Question" });
+                        return;
                     }
-                }
 
-                questions.push({
-                    type_of_question: row["Type of Question"],
-                    level_of_question: row["Level of Question"],
-                    question_text: row["Question"],
-                    file_url: row["File URL"] || null,
-                    options,
-                    correct_option,
-                });
+                    const options = [
+                        row["Option A"],
+                        row["Option B"],
+                        row["Option C"],
+                        row["Option D"],
+                        row["Option E"]
+                    ].filter(Boolean);
+
+                    if (options.length === 0) {
+                        errors.push({ row, reason: "No options provided" });
+                        return;
+                    }
+
+                    const answer = row["Answer"]?.trim().toUpperCase();
+                    let correct_option = null;
+
+                    if (!answer) {
+                        errors.push({ row, reason: "Missing Answer" });
+                        return;
+                    }
+
+                    if (answer.includes(",")) {
+                        correct_option = answer
+                            .split(",")
+                            .map(a => letterToIndex[a.trim()] ?? null)
+                            .filter(a => a !== null);
+
+                        if (correct_option.length === 0) {
+                            errors.push({ row, reason: `Invalid multi-select answer: ${answer}` });
+                            return;
+                        }
+                    } else {
+                        correct_option = letterToIndex[answer] ?? null;
+                        if (correct_option === null) {
+                            errors.push({ row, reason: `Invalid answer: ${answer}` });
+                            return;
+                        }
+                    }
+
+                    questions.push({
+                        type: row["Type of Question"].trim(),
+                        question_text: row["Question"].trim(),
+                        file_url: row["File URL"]?.trim() || null,
+                        options,
+                        correct_option,
+                    });
+                } catch (rowError) {
+                    errors.push({ row, reason: `Row processing failed: ${rowError.message}` });
+                }
             })
             .on("end", async () => {
-                // Save questions
-                const savedQuestions = await Question.insertMany(questions);
+                try {
+                    if (questions.length === 0) {
+                        fs.unlinkSync(file.path);
+                        return res.status(400).json({
+                            success: false,
+                            message: "No valid questions found in CSV",
+                            errors
+                        });
+                    }
 
-                // Create assessment
-                const assessment = new Assessment({
-                    title: req.body.title || "Untitled Assessment",
-                    description: req.body.description || "",
-                    questions: savedQuestions.map((q) => q._id),
-                    created_by: req.user?._id,
-                    status: req.body.status,
-                    classification: req.body.classification,
-                });
-                await assessment.save();
+                    // Save valid questions
+                    const savedQuestions = await Question.insertMany(questions, { ordered: false });
 
+                    // Create assessment
+                    const assessment = new Assessment({
+                        title: req.body.title || "Untitled Assessment",
+                        description: req.body.description || "",
+                        questions: savedQuestions.map((q) => q._id),
+                        created_by: req.user?._id,
+                        status: req.body.status,
+                        classification: req.body.classification,
+                    });
+                    await assessment.save();
+
+                    fs.unlinkSync(file.path);
+
+                    return res.status(201).json({
+                        success: true,
+                        message: "Assessment created from CSV",
+                        data: assessment,
+                        errors // return any skipped rows for debugging
+                    });
+                } catch (dbError) {
+                    console.error("DB save error:", dbError);
+                    fs.unlinkSync(file.path);
+                    return res.status(500).json({
+                        success: false,
+                        message: "Error saving questions or assessment",
+                        error: dbError.message,
+                        errors
+                    });
+                }
+            })
+            .on("error", (csvError) => {
+                console.error("CSV parsing error:", csvError);
                 fs.unlinkSync(file.path);
-
-                return res.status(201).json({
-                    success: true,
-                    message: "Assessment created from CSV",
-                    data: assessment,
+                return res.status(500).json({
+                    success: false,
+                    message: "CSV parsing failed",
+                    error: csvError.message,
                 });
             });
     } catch (error) {
         console.error("CSV upload error:", error);
+        if (req.file) fs.unlinkSync(req.file.path);
         return res.status(500).json({ success: false, message: error.message });
     }
 };
+
 
 const getAssessments = async (req, res) => {
     try {

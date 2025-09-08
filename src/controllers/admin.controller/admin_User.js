@@ -497,7 +497,7 @@ const exportUsers = async (req, res) => {
     
           {
             $lookup: {
-              from: "designations",
+                 from: "designations",
               localField: "profile.designation_id",
               foreignField: "_id",
               as: "designation",

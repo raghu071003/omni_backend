@@ -44,8 +44,8 @@ const getGroups = async (req, res) => {
     try {
       const organization_id =  "68b5a94c5991270bf14b9d13";
       const teams = await Team.find({ organization_id });
-      const subTeams = await SubTeam.find({ organization_id });
-  
+      const subTeams = await SubTeam.find({ team_id });
+      
       const groups = teams.map(team => {
         const subTeamsForTeam = subTeams.filter(
           subTeam => subTeam.team_id.toString() === team._id.toString()

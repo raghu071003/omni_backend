@@ -10,7 +10,7 @@ const moduleSchema = new mongoose.Schema(
       index:true
     },
     organization_id: {
-      type: String,
+      type: mongoose.Schema.Types.ObjectId,
       required: true,
       ref: "Organization",
     },
@@ -26,12 +26,12 @@ const moduleSchema = new mongoose.Schema(
       maxlength: 100,
     },
     team_id: {
-      type: String,
+      type:mongoose.Schema.Types.ObjectId,
       ref: "Team",
       default: null,
     },
     sub_team_id: {
-      type: String,
+      type: mongoose.Schema.Types.ObjectId,
       ref: "SubTeam",
       default: null,
     },
@@ -53,11 +53,11 @@ const moduleSchema = new mongoose.Schema(
       default: [],
     },
     created_by: {
-      type: String,
+      type:   mongoose.Schema.Types.ObjectId,
       ref: "User",
     },
     updated_by: {
-      type: String,
+      type: mongoose.Schema.Types.ObjectId,
       ref: "User",
     },
   },

@@ -3,7 +3,7 @@ const {addUser,editUser,deleteUser,getUsers,getUserbyId, bulkDeleteUsers, bulkEd
 const {addModule,editModule,deleteModule,previewModule,searchModules} = require("../controllers/admin.controller/admin_Module");
 const { addOrgRole, editOrgRole, deleteOrgRole, getOrgRoles } = require("../controllers/admin.controller/admin_Role");
 const { uploadAssessment, uploadContent } = require("../middleware/multer.middleware");
-const { uploadToCloudinary } = require("../utils/uploadOnCloud");
+const { uploadToCloudinary, uploadMultipleToCloudinary } = require("../utils/uploadOnCloud");
 const Department = require("../models/departments.model");
 const { addGroup, getGroups, editGroup, deleteGroup } = require("../controllers/admin.controller/admin_Groups");
 const { addLearningPath, getLearningPaths, getContentsOfLearningPath } = require("../controllers/admin.controller/admin_LearningPath");
@@ -41,7 +41,7 @@ router.route('/editQuestion/:id').put(editQuestion)
 router.route('/deleteQuestion/:id').delete(deleteQuestion)
 router.route('/searchAssessment').get(searchAssessment)
 
-//////Content////////
+//////Module////////
 
 router.route('/createModule').post(uploadContent.single('file'),uploadToCloudinary("modules"),addModule)
 router.route('/editModule/:id').put(uploadContent.single('file'),uploadToCloudinary("modules"),editModule)

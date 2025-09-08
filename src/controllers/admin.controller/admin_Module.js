@@ -8,8 +8,7 @@ const addModule = async(req,res)=>{
       type,
       content,
       file_url,
-      is_active,
-      pushable_to_orgs,
+      sub_team_id,
       status,
       classification,
       team_id
@@ -47,32 +46,22 @@ const addModule = async(req,res)=>{
         message: `${type} content requires a file URL.`
       });
     }
-
-    const newContent = new Content({
-      title,
-      type,
-      content: type === 'Theory' ? content : null,
-      file_url: req.uploadedFile?.url || req.body.file_url || null,
-      is_active: is_active !== undefined ? is_active : true,
-      pushable_to_orgs: pushable_to_orgs !== undefined ? pushable_to_orgs : true,
-      created_by
-    });
-
-    await newContent.save();
     const organizationContent = new OrganizationContent({
-      content_id: newContent.uuid,
-      organization_id: "9c6a2ad3-037c-4f4c-af2c-ea8ad25f9a83",
-      pushed_by: "e0f36877-43c5-427b-a450-192d00c8472a",
-      push_date: Date.now(),
+      name:title,
+      organization_id: "68bc0898fdb4a64d5a727a60",
+      created_by: "68bc1d953f117b638adf49dc",
       classification,
       status,
-      team_id
+      team_id,
+      sub_team_id,
+      module_files:[req.uploadedFile?.url],
+      pushed_by:"68bc1d953f117b638adf49dc"
     });
     await organizationContent.save();
     return res.status(201).json({
       success: true,
       message: 'Content added successfully.',
-      data: newContent
+      data: organizationContent
     });
 
   } catch (error) {

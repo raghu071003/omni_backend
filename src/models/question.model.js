@@ -5,6 +5,9 @@ const questionSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  type:{
+    type:String,
+  },
   file_url:{
     type:String,
     default:null
