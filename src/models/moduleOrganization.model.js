@@ -49,7 +49,7 @@ const moduleSchema = new mongoose.Schema(
       default: null,
     },
     module_files: {
-      type: [String], // Array of file URLs or identifiers
+      type: [String], 
       default: [],
     },
     created_by: {

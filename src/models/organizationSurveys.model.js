@@ -10,7 +10,7 @@ const surveySchema = new mongoose.Schema(
       index:true
     },
     organization_id: {
-      type: String,
+      type: mongoose.Schema.Types.ObjectId,
       required: true,
       ref: "Organization",
     },
@@ -33,13 +33,18 @@ const surveySchema = new mongoose.Schema(
       type: String,
       default: null,
     },
-    created_by: {
-      type: String,
+    questions: {
+      type:[mongoose.Schema.Types.ObjectId],
+      ref:"OrganizationSurveyQuestion",
+      required:true
+    },  
+    created_by: { 
+      type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       default: null,
     },
     updated_by: {
-      type: String,
+      type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       default: null,
     },

@@ -6,7 +6,9 @@ const { uploadAssessment, uploadContent } = require("../middleware/multer.middle
 const { uploadToCloudinary, uploadMultipleToCloudinary } = require("../utils/uploadOnCloud");
 const Department = require("../models/departments.model");
 const { addGroup, getGroups, editGroup, deleteGroup } = require("../controllers/admin.controller/admin_Groups");
-const { addLearningPath, getLearningPaths, getContentsOfLearningPath } = require("../controllers/admin.controller/admin_LearningPath");
+const { addLearningPath, getLearningPaths, getContentsOfLearningPath, editLearningPath, deleteLearningPath } = require("../controllers/admin.controller/admin_LearningPath");
+const { createSurvey, deleteSurvey, getSurveys, editSurvey } = require("../controllers/admin.controller/admin_Surveys");
+const { setMessage, editMessage, deleteMessage } = require("../controllers/admin.controller/admin_message");
 
 const router = require("express").Router();
 
@@ -47,11 +49,7 @@ router.route('/createModule').post(uploadContent.single('file'),uploadToCloudina
 router.route('/editModule/:id').put(uploadContent.single('file'),uploadToCloudinary("modules"),editModule)
 router.route('/deleteModule/:id').delete(deleteModule)
 router.route('/previewModule/:id').get(previewModule)
-router.route('/searchModules').get(searchModules)
-
-// router.route('/getContent').get(getContent)
-// router.route('/editContent/:id').put(editContent)
-// router.route('/deleteContent/:id').delete(deleteContent)
+router.route('/searchModules').get(searchModules)   
 
 //////Groups////////
 
@@ -63,9 +61,22 @@ router.route('/deleteGroup/:id').delete(deleteGroup)
 //////Learning Path////////
 
 router.route('/addLearningPath').post(addLearningPath)
-router.route('/getLearningPaths/:id').get(getLearningPaths)
+router.route('/getLearningPaths').get(getLearningPaths)
 router.route('/getLearningPathContents/:id').get(getContentsOfLearningPath)
-// router.route('/editLearningPath/:id').put(editLearningPath)
-// router.route('/deleteLearningPath/:id').delete(deleteLearningPath)
+router.route('/editLearningPath/:id').put(editLearningPath)
+router.route('/deleteLearningPath/:id').delete(deleteLearningPath)
+
+
+//////Surveys////////
+router.route('/createSurvey').post(createSurvey)
+router.route('/deleteSurvey/:id').delete(deleteSurvey)
+router.route('/getSurveys').get(getSurveys)
+router.route('/editSurvey/:id').put(editSurvey)
+
+
+////////MessageForUser////
+router.route('/setMessage').post(setMessage)
+router.route('/editMessage/:id').put(editMessage)
+router.route('/deleteMessage/:id').delete(deleteMessage)
 
 module.exports = router;

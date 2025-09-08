@@ -1,5 +1,5 @@
-const Content = require("../../models/content.model");
-const OrganizationContent = require("../../models/contentOrganization.model");
+
+const Module = require("../../models/moduleOrganization.model");
 
 const addModule = async(req,res)=>{
   try {
@@ -46,28 +46,28 @@ const addModule = async(req,res)=>{
         message: `${type} content requires a file URL.`
       });
     }
-    const organizationContent = new OrganizationContent({
+    const moduleOrganization = await Module.create({
       name:title,
       organization_id: "68bc0898fdb4a64d5a727a60",
       created_by: "68bc1d953f117b638adf49dc",
       classification,
       status,
-      team_id,
+      team_id,  
+      content,
       sub_team_id,
       module_files:[req.uploadedFile?.url],
       pushed_by:"68bc1d953f117b638adf49dc"
     });
-    await organizationContent.save();
     return res.status(201).json({
       success: true,
-      message: 'Content added successfully.',
-      data: organizationContent
+      message: 'Module added successfully.',
+      data: moduleOrganization
     });
 
   } catch (error) {
     return res.status(500).json({
       success: false,
-      message: 'Failed to add content.',
+      message: 'Failed to add Module.',
       error: error.message
     });
   }
@@ -75,43 +75,41 @@ const addModule = async(req,res)=>{
 
 const editModule = async (req, res) => {
   try {
-    const { title, type, content, file_url, is_active, pushable_to_orgs, status, classification, team_id } = req.body;
+    const {
+      title,
+      type,
+      content,
+      file_url,
+      sub_team_id,
+      status,
+      classification,
+      team_id
+    } = req.body;
 
     // Update the Content doc and get the updated document back
-    const updatedContent = await Content.findOneAndUpdate(
+    const updatedContent = await Module.findOneAndUpdate(
       { uuid: req.params.id },
       {
         title,
-        content: type === 'Theory' ? content : null,
-        file_url: type !== 'Theory' ? file_url : null,
-        is_active: is_active !== undefined ? is_active : true,
-        pushable_to_orgs: pushable_to_orgs !== undefined ? pushable_to_orgs : true,
+        content,
+        sub_team_id,
+        status,
+        classification,
+        team_id,
+        module_files:[req.uploadedFile?.url],
       },
       { new: true, runValidators: true }
     );
 
     if (!updatedContent) {
-      return res.status(404).json({ success: false, message: 'Content not found' });
+      return res.status(404).json({ success: false, message: 'Module not found' });
     }
 
-    // Update OrganizationContent using the updated content's uuid
-    const updatedOrgModule = await OrganizationContent.findOneAndUpdate(
-      { content_id: updatedContent.uuid },
-      {
-        classification,
-        status,
-        team_id,
-      },
-      { new: true, runValidators: true }
-    );
 
     return res.status(200).json({
       success: true,
       message: "Module edited successfully",
-      data: {
-        content: updatedContent,
-        organizationContent: updatedOrgModule,
-      },
+      data: updatedContent,
     });
   } catch (error) {
     return res.status(500).json({ success: false, message: "Failed to edit module", error: error.message });
@@ -120,8 +118,7 @@ const editModule = async (req, res) => {
 
 const deleteModule = async(req,res)=>{
     try {
-        const deletedContent = await Content.findOneAndDelete({uuid:req.params.id})
-        const deletedOrgModule = await OrganizationContent.findOneAndDelete({content_id:deletedContent.uuid})
+        const deletedContent = await Module.findOneAndDelete({uuid:req.params.id})
         return res.status(200).json({
             success:true,
             message:"Module deleted successfully",
@@ -138,7 +135,7 @@ const deleteModule = async(req,res)=>{
 
 const previewModule = async(req,res)=>{
     try {
-        const content = await Content.findOne({uuid:req.params.id})
+        const content = await Module.findOne({uuid:req.params.id})
         return res.status(200).json({
             success:true,
             message:"Module previewed successfully",
@@ -164,17 +161,10 @@ const searchModules = async (req, res) => {
         message: "Search term is required",
       });
     }
-
-    // Step 1: Get content IDs for the org
-    const orgContent = await OrganizationContent.find().select("content_id");
-    const contentIds = orgContent.map((item) => item.content_id);
-
-    // Step 2: Search directly in MongoDB
     const regex = new RegExp(searchTerm, "i"); // case-insensitive regex
-    const content = await Content.find({
-      uuid: { $in: contentIds },
+    const modules = await Module.find({
+      name: regex,
       $or: [
-        { title: regex },
         { classification },
         { team_id }, // make sure team_id is a String, else adjust
         { status },
@@ -184,7 +174,7 @@ const searchModules = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "Modules searched successfully",
-      data: content,
+      data: modules,
     });
   } catch (error) {
     return res.status(500).json({

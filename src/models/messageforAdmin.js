@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const { v4: uuidv4 } = require("uuid");
 
-const forUserMessageSchema = new mongoose.Schema(
+const forAdminMessageSchema = new mongoose.Schema(
   {
     uuid: {
       type: String,
@@ -33,6 +33,6 @@ const forUserMessageSchema = new mongoose.Schema(
   }
 );
 
-const ForUserMessage = mongoose.model("ForUserMessage", forUserMessageSchema);
+const ForAdminMessage = mongoose.model("ForAdminMessage", forAdminMessageSchema);
 
-module.exports = ForUserMessage;
+module.exports = ForAdminMessage;

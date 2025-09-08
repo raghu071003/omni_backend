@@ -9,11 +9,6 @@ const surveyQuestionSchema = new mongoose.Schema(
       unique: true,
       index:true
     },
-    organization_survey_id: {
-      type: String,
-      required: true,
-      ref: "OrganizationSurvey",
-    },
     question_text: {
       type: String,
       required: true,
@@ -34,10 +29,10 @@ const surveyQuestionSchema = new mongoose.Schema(
     },
   },
   {
-    timestamps: true,
+    timestamps: true, 
   }
 );
 
-const OrganizationSurveyQuestion = mongoose.model("OrganizationSurveyQuestion", surveyQuestionSchema);
+const GlobalSurveyQuestion = mongoose.model("GlobalSurveyQuestion", surveyQuestionSchema);
 
-module.exports = OrganizationSurveyQuestion;
+module.exports = GlobalSurveyQuestion;

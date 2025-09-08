@@ -1,9 +1,10 @@
 const {addOrganization, editOrganization, deleteOrganization, getOrganizations} = require("../controllers/globalAdmin.controller/globalAdmin_organization");
 const {addRole, editRole, deleteRole, getRoles} = require("../controllers/globalAdmin.controller/globalAdmin_Roles");
 const {addContent, editContent, deleteContent, getContent} = require("../controllers/globalAdmin.controller/globalAdmin_content");
-const {createSurvey, editSurvey, deleteSurvey, getSurveys} = require("../controllers/globalAdmin.controller/globalAdmin_Surveys");
+const {createSurvey, editSurvey, deleteSurvey, getSurveys, getSurvey} = require("../controllers/globalAdmin.controller/globalAdmin_Surveys");
 const {upload,uploadContent} = require("../middleware/multer.middleware");
 const { uploadMultipleToCloudinary, uploadToCloudinary } = require("../utils/uploadOnCloud");
+const { setMessage } = require("../controllers/globalAdmin.controller/globalAdmin_message");
 // const csvStream = require("../utils/csvParser");
 
 const router = require("express").Router();
@@ -37,7 +38,12 @@ router.route('/createSurvey').post(createSurvey)
 router.route('/editSurvey/:id').put(editSurvey)
 router.route('/deleteSurvey/:id').delete(deleteSurvey)
 router.route('/getSurveys').get(getSurveys)
+router.route('/getSurvey/:id').get(getSurvey)
 // router.route('/viewResponses/:id').get(viewResponses)
 
+
+//////////MessagesforAdmin//////////
+
+router.route('/setMessage').post(setMessage)
 
 module.exports = router;

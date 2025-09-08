@@ -19,13 +19,9 @@ const surveySchema = new mongoose.Schema(
       default: null,
     },
     questions: {
-      type: Array,
-      required: true,
-      // Example validation for structure (optional, based on your JSON shape)
-      // validate: {
-      //   validator: (arr) => Array.isArray(arr),
-      //   message: "Questions should be an array of question objects",
-      // },
+      type:[mongoose.Schema.Types.ObjectId],
+      ref:"GlobalSurveyQuestion",
+      required:true
     },
     survey_type: {
       type: String,
@@ -55,6 +51,6 @@ const surveySchema = new mongoose.Schema(
   }
 );
 
-const Surveys = mongoose.model("Surveys", surveySchema);
+const Surveys = mongoose.model("GlobalSurveys", surveySchema);
 
 module.exports = Surveys;

@@ -17,17 +17,23 @@ const LearningPathSchema = new mongoose.Schema(
       // Array of days
       schedule: [
         {
+
+          
           day: { type: Number, required: true }, // e.g., 1, 2, 3
   
           // Modules for this day
           modules: [
-            { type: mongoose.Schema.Types.ObjectId, ref: "Content" }
+            { type: mongoose.Schema.Types.ObjectId, ref: "Module" }
           ],
   
           // Assessments for this day
           assessments: [
             { type: mongoose.Schema.Types.ObjectId, ref: "Assessment" }
-          ]
+          ],
+          survey:{
+            type:mongoose.Schema.Types.ObjectId,
+            ref:"OrganizationSurvey"
+          }
         }
       ],
   
