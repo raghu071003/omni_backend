@@ -4,7 +4,7 @@ const User = require("../models/users_model");
 const authenticate = (req,res,next)=>{
 
     const token = req.cookies.accessToken;
-    console.log(token)
+    // console.log(token)
     if(!token){
         return res.status(401).json({
             isSuccess:false,

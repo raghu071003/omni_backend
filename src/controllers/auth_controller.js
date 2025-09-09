@@ -27,6 +27,9 @@ const login = async (req,res) => {
                 message:"Invalid email or password"
             })
         }
+        user.last_login = new Date();
+        await user.save();
+        user.password = undefined;
         const {accessToken,refreshToken} = await generateTokens(user._id,role.name) 
         // console.log(accessToken,refreshToken)
         res.cookie("refreshToken",refreshToken,options);
@@ -47,6 +50,28 @@ const login = async (req,res) => {
     }
 }
 
+
+const logout = async(req,res)=>{
+    try {
+        const userId = req.user._id;
+        const user = await User.findById(userId)
+        user.refreshToken = undefined;
+        await user.save();
+        res.clearCookie("refreshToken");
+        res.clearCookie("accessToken");
+        return res.status(200).json({
+            isSuccess:true,
+            message:"Logout successful"
+        })
+    } catch (error) {
+        return res.status(500).json({
+            isSuccess:false,
+            message:"Failed to logout",
+            error:error.message
+        })
+    }
+}
+
 const generateTokens = async (userId,role) => {
     // console.log(process.env.ACCESS_TOKEN_SECRET)
     // console.log(userId)
@@ -62,5 +87,6 @@ const generateTokens = async (userId,role) => {
 }
 
 module.exports={
-    login
+    login,
+    logout
 }
