@@ -27,7 +27,7 @@ const uploadToCloudinary = (folder) => {
     } catch (error) {
       if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
       return res.status(500).json({
-        success: false,
+        isSuccess: false,
         message: "Cloudinary upload failed",
         error: error.message,
       });
@@ -67,7 +67,7 @@ const uploadMultipleToCloudinary = async (req, res, next) => {
       next();
     } catch (error) {
       return res.status(500).json({
-        success: false,
+        isSuccess: false,
         message: "Cloudinary upload failed",
         error: error.message,
       });

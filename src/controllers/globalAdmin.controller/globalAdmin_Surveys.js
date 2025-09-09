@@ -1,7 +1,7 @@
 const { default: mongoose } = require("mongoose");
-const SurveyResponses = require("../../models/global_surveyResponses.model");
-const Surveys = require("../../models/global_surveys.model");
-const GlobalSurveyQuestion = require("../../models/global_surveys_Questions.model");
+const SurveyResponses = require("../../models/global_surveyResponses_model");
+const Surveys = require("../../models/global_surveys_model");
+const GlobalSurveyQuestion = require("../../models/global_surveys_Questions_model");
 
 const createSurvey = async (req, res) => {
   const session = await mongoose.startSession();
@@ -33,7 +33,7 @@ const createSurvey = async (req, res) => {
       await session.abortTransaction();
       session.endSession();
       return res.status(400).json({
-        success: false,
+        isSuccess: false,
         message: "No valid questions found",
         errors,
       });
@@ -57,7 +57,7 @@ const createSurvey = async (req, res) => {
     session.endSession();
 
     return res.status(201).json({
-      success: true,
+      isSuccess: true,
       message: 'Survey created successfully',
       data: survey,
       errors: errors.length ? errors : undefined,
@@ -68,7 +68,7 @@ const createSurvey = async (req, res) => {
     await session.abortTransaction();
     session.endSession();
     return res.status(500).json({
-      success: false,
+      isSuccess: false,
       message: 'Failed to create survey',
       error: error.message,
     });
@@ -107,7 +107,7 @@ const editSurvey = async (req, res) => {
       await session.abortTransaction();
       session.endSession();
       return res.status(400).json({
-        success: false,
+        isSuccess: false,
         message: "No valid questions found",
         errors,
       });
@@ -119,7 +119,7 @@ const editSurvey = async (req, res) => {
       await session.abortTransaction();
       session.endSession();
       return res.status(404).json({
-        success: false,
+        isSuccess: false,
         message: "Survey not found",
       });
     }
@@ -147,7 +147,7 @@ const editSurvey = async (req, res) => {
     session.endSession();
 
     return res.status(200).json({
-      success: true,
+      isSuccess: true,
       message: "Survey updated successfully",
       data: survey,
       errors: errors.length ? errors : undefined,
@@ -156,7 +156,7 @@ const editSurvey = async (req, res) => {
     await session.abortTransaction();
     session.endSession();
     return res.status(500).json({
-      success: false,
+      isSuccess: false,
       message: "Failed to update survey",
       error: error.message,
     });
@@ -175,7 +175,7 @@ const deleteSurvey = async (req, res) => {
       await session.abortTransaction();
       session.endSession();
       return res.status(404).json({
-        success: false,
+        isSuccess: false,
         message: "Survey not found",
       });
     }
@@ -193,7 +193,7 @@ const deleteSurvey = async (req, res) => {
     session.endSession();
 
     return res.status(200).json({
-      success: true,
+      isSuccess: true,
       message: "Survey deleted successfully",
       data: survey,
     });
@@ -203,7 +203,7 @@ const deleteSurvey = async (req, res) => {
     await session.abortTransaction();
     session.endSession();
     return res.status(500).json({
-      success: false,
+      isSuccess: false,
       message: "Failed to delete survey",
       error: error.message,
     });
@@ -219,7 +219,7 @@ const deleteSurvey = async (req, res) => {
       const surveys = await Surveys.find().skip(skip).limit(limit)
       const total = await Surveys.countDocuments()
       return res.status(200).json({
-        success: true,
+        isSuccess: true,
         message: 'Surveys fetched successfully',
         data: surveys,
         pagination:{
@@ -232,7 +232,7 @@ const deleteSurvey = async (req, res) => {
       });
     } catch (error) {
       return res.status(500).json({
-        success: false,
+        isSuccess: false,
         message: 'Failed to fetch surveys',
         error: error.message,
       });
@@ -244,18 +244,18 @@ const deleteSurvey = async (req, res) => {
       const survey = await Surveys.findOne({uuid:req.params.id}).populate("questions")
       if(!survey){
         return res.status(404).json({
-          success:false,
+          isSuccess:false,
           message:"Survey not found"
         })
       }
       return res.status(200).json({
-        success:true,
+        isSuccess:true,
         message:"Survey fetched successfully",
         data:survey
       })
     } catch (error) {
       return res.status(500).json({
-        success:false,
+        isSuccess:false,
         message:"Failed to fetch survey",
         error:error.message
       })
@@ -266,13 +266,13 @@ const deleteSurvey = async (req, res) => {
       try {
           const response = await SurveyResponses.findById(req.params.id)
           return res.status(200).json({
-              success:true,
+              isSuccess:true,
               message:"Response fetched successfully",
               data:response
           })
       } catch (error) {
           return res.status(500).json({
-              success:false,
+              isSuccess:false,
               message:"Failed to fetch response",
               error:error.message
           })
@@ -282,13 +282,13 @@ const deleteSurvey = async (req, res) => {
       try {
           const responses = await SurveyResponses.find()
           return res.status(200).json({
-              success:true,
+              isSuccess:true,
               message:"Responses fetched successfully",
               data:responses
           })
       } catch (error) {
           return res.status(500).json({
-              success:false,
+              isSuccess:false,
               message:"Failed to fetch responses",
               error:error.message
           })

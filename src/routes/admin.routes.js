@@ -4,79 +4,87 @@ const {addModule,editModule,deleteModule,previewModule,searchModules} = require(
 const { addOrgRole, editOrgRole, deleteOrgRole, getOrgRoles } = require("../controllers/admin.controller/admin_Role");
 const { uploadAssessment, uploadContent } = require("../middleware/multer.middleware");
 const { uploadToCloudinary, uploadMultipleToCloudinary } = require("../utils/uploadOnCloud");
-const Department = require("../models/departments.model");
+const Department = require("../models/departments_model");
 const { addGroup, getGroups, editGroup, deleteGroup } = require("../controllers/admin.controller/admin_Groups");
 const { addLearningPath, getLearningPaths, getContentsOfLearningPath, editLearningPath, deleteLearningPath } = require("../controllers/admin.controller/admin_LearningPath");
 const { createSurvey, deleteSurvey, getSurveys, editSurvey } = require("../controllers/admin.controller/admin_Surveys");
 const { setMessage, editMessage, deleteMessage } = require("../controllers/admin.controller/admin_message");
+const { getActivities } = require("../controllers/admin.controller/admin_activity");
+const { addUserId } = require("../middleware/dummyAuth");
 
 const router = require("express").Router();
 
-router.route('/addUser').post(addUser)
-router.route('/editUser/:id').put(editUser)
-router.route('/deleteUser/:id').delete(deleteUser)
-router.route('/getUsers').get(getUsers)
-router.route('/getUser/:id').get(getUserbyId)
-router.route('/bulkDeleteUsers').delete(bulkDeleteUsers)
-router.route('/bulkEditUsers').put(bulkEditUsers)
-router.route('/exportUsers').get(exportUsers)
+router.route('/addUser').post(addUserId,addUser)
+router.route('/editUser/:id').put(addUserId,editUser)
+router.route('/deleteUser/:id').delete(addUserId,deleteUser)
+router.route('/getUsers').get(addUserId,getUsers)
+router.route('/getUser/:id').get(addUserId,getUserbyId)
+router.route('/bulkDeleteUsers').delete(addUserId,bulkDeleteUsers)
+router.route('/bulkEditUsers').put(addUserId,bulkEditUsers)
+router.route('/exportUsers').get(addUserId,exportUsers)
 
 
 /////ROLES////////
 
-router.route('/addOrgRole').post(addOrgRole)
-router.route('/editOrgRole/:id').put(editOrgRole)
-router.route('/deleteOrgRole/:id').delete(deleteOrgRole)
-router.route('/getOrgRoles').get(getOrgRoles)
+router.route('/addOrgRole').post(addUserId,addOrgRole)
+router.route('/editOrgRole/:id').put(addUserId,editOrgRole)
+router.route('/deleteOrgRole/:id').delete(addUserId,deleteOrgRole)
+router.route('/getOrgRoles').get(addUserId,getOrgRoles)
 
 //////Assessment////////
 
-router.route('/createAssessment').post(createAssessment)
-router.route('/createAssessmentCSV').post(uploadAssessment.single('file'),uploadAssessmentCSV)
-router.route('/getAssessments').get(getAssessments)
-router.route('/getQuestions/:id').get(getQuestions)
-router.route('/getQuestionsRandom/:id').get(getQuestionsRandom)
-router.route('/getAssessmentById/:id').get(getAssessmentById)
-router.route('/editAssessment/:id').put(editAssessment)
-router.route('/deleteAssessment/:id').delete(deleteAssessment)
-router.route('/editQuestion/:id').put(editQuestion)
-router.route('/deleteQuestion/:id').delete(deleteQuestion)
-router.route('/searchAssessment').get(searchAssessment)
+router.route('/createAssessment').post(addUserId,createAssessment)
+router.route('/createAssessmentCSV').post(addUserId,uploadAssessment.single('file'),uploadAssessmentCSV)
+router.route('/getAssessments').get(addUserId,getAssessments)
+router.route('/getQuestions/:id').get(addUserId,getQuestions)
+router.route('/getQuestionsRandom/:id').get(addUserId,getQuestionsRandom)
+router.route('/getAssessmentById/:id').get(addUserId,getAssessmentById)
+router.route('/editAssessment/:id').put(addUserId,editAssessment)
+router.route('/deleteAssessment/:id').delete(addUserId,deleteAssessment)
+router.route('/editQuestion/:id').put(addUserId,editQuestion)
+router.route('/deleteQuestion/:id').delete(addUserId,deleteQuestion)
+router.route('/searchAssessment').get(addUserId,searchAssessment)
 
 //////Module////////
 
-router.route('/createModule').post(uploadContent.single('file'),uploadToCloudinary("modules"),addModule)
-router.route('/editModule/:id').put(uploadContent.single('file'),uploadToCloudinary("modules"),editModule)
-router.route('/deleteModule/:id').delete(deleteModule)
-router.route('/previewModule/:id').get(previewModule)
-router.route('/searchModules').get(searchModules)   
+router.route('/createModule').post(addUserId,uploadContent.single('file'),uploadToCloudinary("modules"),addModule)
+router.route('/editModule/:id').put(addUserId,uploadContent.single('file'),uploadToCloudinary("modules"),editModule)
+router.route('/deleteModule/:id').delete(addUserId,deleteModule)
+router.route('/previewModule/:id').get(addUserId,previewModule)
+router.route('/searchModules').get(addUserId,searchModules)   
 
 //////Groups////////
 
-router.route('/addGroup').post(addGroup)
-router.route('/getGroups').get(getGroups)
-router.route('/editGroup/:id').put(editGroup)
-router.route('/deleteGroup/:id').delete(deleteGroup)
+router.route('/addGroup').post(addUserId,addGroup)
+router.route('/getGroups').get(addUserId,getGroups)
+router.route('/editGroup/:id').put(addUserId,editGroup)
+router.route('/deleteGroup/:id').delete(addUserId,deleteGroup)
 
 //////Learning Path////////
 
-router.route('/addLearningPath').post(addLearningPath)
-router.route('/getLearningPaths').get(getLearningPaths)
-router.route('/getLearningPathContents/:id').get(getContentsOfLearningPath)
-router.route('/editLearningPath/:id').put(editLearningPath)
-router.route('/deleteLearningPath/:id').delete(deleteLearningPath)
+router.route('/addLearningPath').post(addUserId,addLearningPath)
+router.route('/getLearningPaths').get(addUserId,getLearningPaths)
+router.route('/getLearningPathContents/:id').get(addUserId,getContentsOfLearningPath)
+router.route('/editLearningPath/:id').put(addUserId,editLearningPath)
+router.route('/deleteLearningPath/:id').delete(addUserId,deleteLearningPath)
 
 
 //////Surveys////////
-router.route('/createSurvey').post(createSurvey)
-router.route('/deleteSurvey/:id').delete(deleteSurvey)
-router.route('/getSurveys').get(getSurveys)
-router.route('/editSurvey/:id').put(editSurvey)
+router.route('/createSurvey').post(addUserId,createSurvey)
+router.route('/deleteSurvey/:id').delete(addUserId,deleteSurvey)
+router.route('/getSurveys').get(addUserId,getSurveys)
+router.route('/editSurvey/:id').put(addUserId,editSurvey)
 
 
 ////////MessageForUser////
-router.route('/setMessage').post(setMessage)
-router.route('/editMessage/:id').put(editMessage)
-router.route('/deleteMessage/:id').delete(deleteMessage)
+router.route('/setMessage').post(addUserId,setMessage)
+router.route('/editMessage/:id').put(addUserId,editMessage)
+router.route('/deleteMessage/:id').delete(addUserId,deleteMessage)
+
+
+
+/////Activity Log /////
+
+// router.route('/getActivities').get(getActivities)
 
 module.exports = router;

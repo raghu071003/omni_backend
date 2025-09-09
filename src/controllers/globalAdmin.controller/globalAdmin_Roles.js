@@ -1,4 +1,4 @@
-const GlobalRoles = require("../../models/globalRoles.model");
+const GlobalRoles = require("../../models/globalRoles_model");
 
 const addRole = async(req,res)=>{
     //// Changes to be made in roles model
@@ -10,13 +10,13 @@ const addRole = async(req,res)=>{
             permissions
         })
         return res.status(201).json({
-            success:true,
+            isSuccess:true,
             message:"Role added successfully",
             data:newRole
         })
     } catch (error) {
         return res.status(500).json({
-            success:false,
+            isSuccess:false,
             message:"Failed to add role",
             error:error.message
         })
@@ -32,13 +32,13 @@ const editRole = async(req,res)=>{
             permissions
         })
         return res.status(200).json({
-            success:true,
+            isSuccess:true,
             message:"Role updated successfully",
             data:updatedRole
         })
     } catch (error) {
         return res.status(500).json({
-            success:false,
+            isSuccess:false,
             message:"Failed to update role",
             error:error.message
         })
@@ -49,13 +49,13 @@ const deleteRole = async(req,res)=>{
     try {
         const deletedRole = await GlobalRoles.findOneAndDelete({uuid:req.params.id})
         return res.status(200).json({
-            success:true,
+            isSuccess:true,
             message:"Role deleted successfully",
             data:deletedRole
         })
     } catch (error) {
         return res.status(500).json({
-            success:false,
+            isSuccess:false,
             message:"Failed to delete role",
             error:error.message
         })
@@ -69,7 +69,7 @@ const getRoles = async(req,res)=>{
         const roles = await GlobalRoles.find().skip(skip).limit(limit)
         const total = await GlobalRoles.countDocuments()
         return res.status(200).json({
-            success:true,
+            isSuccess:true,
             message:"Roles fetched successfully",
             data:roles,
             pagination:{
@@ -82,7 +82,7 @@ const getRoles = async(req,res)=>{
         })
     } catch (error) {
         return res.status(500).json({
-            success:false,
+            isSuccess:false,
             message:"Failed to fetch roles",
             error:error.message
         })

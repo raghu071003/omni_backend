@@ -1,13 +1,12 @@
 const mongoose = require("mongoose");
 const createCsvWriter = require('csv-writer').createObjectCsvStringifier;
-const UserProfile = require("../../models/userProfiles.model");
-const OrganizationRole = require("../../models/organizationRoles.model");
-const Team = require("../../models/teams.model");
-const SubTeam = require("../../models/subTeams.model");
-const Designation = require("../../models/desginations.model");
-const User = require("../../models/users.model");
-const Organization = require("../../models/organization.model");
-const {sendMail} = require("../../utils/Emailer");
+const UserProfile = require("../../models/userProfiles_model");
+const OrganizationRole = require("../../models/organizationRoles_model");
+const Team = require("../../models/teams_model");
+const SubTeam = require("../../models/subTeams_model");
+const Designation = require("../../models/desginations_model");
+const User = require("../../models/users_model");
+const Organization = require("../../models/organization_model");
 
 const addUser = async (req, res) => {
   const session = await mongoose.startSession();
@@ -70,18 +69,19 @@ const addUser = async (req, res) => {
 
     // Commit the transaction
     await session.commitTransaction();
-    
+    await logAdminActivity(req, "add", `User added successfully: ${name}`);
     // Return response
     return res.status(201).json({
-      success: true,
+      isSuccess: true,
       message: "User added successfully",
       data: userProfile
     });
   } catch (error) {
     // Abort transaction if an error occurs
     await session.abortTransaction();
+    await logAdminActivity(req, "add", `User addition failed: ${error.message}`);
     return res.status(500).json({
-      success: false,
+      isSuccess: false,
       message: "Failed to add user",
       error: error.message
     });
@@ -114,15 +114,17 @@ const editUser = async(req,res)=>{
             organization_id:"4cbc71d2-5e44-4991-80d2-cca34124596a"
         })
         await userProfile.save();
+        await logAdminActivity(req, "edit", `User edited successfully: ${user.name}`);
         return res.status(200).json({
-            success:true,
+            isSuccess:true,
             message:"User updated successfully",
             data:user
         })
     } catch (error) {
         await session.abortTransaction();
+        await logAdminActivity(req, "edit", `User editing failed: ${error.message}`);
         return res.status(500).json({
-            success:false,
+            isSuccess:false,
             message:"Failed to update user",
             error:error.message
         })
@@ -139,7 +141,7 @@ const deleteUser = async (req, res) => {
     if (!deletedUser) {
       await session.abortTransaction();
       return res.status(404).json({
-        success: false,
+        isSuccess: false,
         message: "User not found",
       });
     }
@@ -154,17 +156,18 @@ const deleteUser = async (req, res) => {
 
     // Commit the transaction
     await session.commitTransaction();
-    
+    await logAdminActivity(req, "delete", `User deleted successfully: ${deletedUser.name}`);
     return res.status(200).json({
-      success: true,
+      isSuccess: true,
       message: "User deleted successfully",
       data: deletedUser,
     });
   } catch (error) {
     // Rollback transaction in case of error
     await session.abortTransaction();
+    await logAdminActivity(req, "delete", `User deletion failed: ${error.message}`);
     return res.status(500).json({
-      success: false,
+      isSuccess: false,
       message: "Failed to delete user",
       error: error.message,
     });
@@ -246,16 +249,17 @@ const getUsers = async (req, res) => {
         totalPages,
         hasMore
       };
-  
+      await logAdminActivity(req, "view", `Users fetched successfully: ${users.length}`);
       return res.status(200).json({
-        success: true,
+        isSuccess: true,
         message: "Users fetched successfully",
         data: users,
         pagination
       });
     } catch (error) {
+      await logAdminActivity(req, "view", `Users fetching failed: ${error.message}`);
       return res.status(500).json({
-        success: false,
+        isSuccess: false,
         message: "Failed to fetch users",
         error: error.message
       });
@@ -269,7 +273,7 @@ const getUsers = async (req, res) => {
       const user = await User.findOne({uuid:req.params.id}).lean();
       if (!user) {
         return res.status(404).json({
-          success: false,
+          isSuccess: false,
           message: "User not found",
         });
       }
@@ -291,7 +295,7 @@ const getUsers = async (req, res) => {
   
       if (!profile) {
         return res.status(404).json({
-          success: false,
+          isSuccess: false,
           message: "User profile not found",
         });
       }
@@ -311,25 +315,25 @@ const getUsers = async (req, res) => {
   
       if (!designationDoc) {
         return res.status(404).json({
-          success: false,
+          isSuccess: false,
           message: "Designation not found",
         });
       }
       if (!teamDoc) {
         return res.status(404).json({
-          success: false,
+          isSuccess: false,
           message: "Team not found",
         });
       }
       if (!subTeamDoc) {
         return res.status(404).json({
-          success: false,
+          isSuccess: false,
           message: "Sub team not found",
         });
       }
       if (!organizationRoleDoc) {
         return res.status(404).json({
-          success: false,
+          isSuccess: false,
           message: "Organization role not found",
         });
       }
@@ -343,14 +347,16 @@ const getUsers = async (req, res) => {
         sub_team: subTeamDoc,
         organization_role: organizationRoleDoc,
       };
+      await logAdminActivity(req, "view", `User fetched successfully: ${user.name}`);
       return res.status(200).json({
-        success: true,
+        isSuccess: true,
         message: "User fetched successfully",
         data: result,
       });
     } catch (error) {
+      await logAdminActivity(req, "view", `User fetching failed: ${error.message}`);
       return res.status(500).json({
-        success: false,
+        isSuccess: false,
         message: "Failed to fetch user",
         error: error.message,
       });
@@ -365,7 +371,7 @@ const bulkDeleteUsers = async (req, res) => {
       // Validate input
       if (!Array.isArray(ids) || ids.length === 0) {
         return res.status(400).json({
-          success: false,
+          isSuccess: false,
           message: "Please provide an array of user IDs to delete.",
         });
       }
@@ -382,9 +388,9 @@ const bulkDeleteUsers = async (req, res) => {
       const deletedProfiles = await UserProfile.deleteMany({
         user_id: { $in: uuidsToDelete },
       });
-  
+      await logAdminActivity(req, "delete", `Users and their profiles deleted successfully: ${deletedUsers.deletedCount}`);
       return res.status(200).json({
-        success: true,
+        isSuccess: true,
         message: "Users and their profiles deleted successfully",
         data: {
           deletedUsersCount: deletedUsers.deletedCount,
@@ -392,8 +398,9 @@ const bulkDeleteUsers = async (req, res) => {
         },
       });
     } catch (error) {
+      await logAdminActivity(req, "delete", `Users and their profiles deletion failed: ${error.message}`);
       return res.status(500).json({
-        success: false,
+        isSuccess: false,
         message: "Failed to delete users and profiles",
         error: error.message,
       });
@@ -402,6 +409,7 @@ const bulkDeleteUsers = async (req, res) => {
   
 
   const bcrypt = require("bcrypt");
+const logAdminActivity = require("./admin_activity");
 
   const bulkEditUsers = async (req, res) => {
     try {
@@ -409,7 +417,7 @@ const bulkDeleteUsers = async (req, res) => {
   
       if (!Array.isArray(ids) || ids.length === 0) {
         return res.status(400).json({
-          success: false,
+          isSuccess: false,
           message: "Please provide an array of user IDs to update.",
         });
       }
@@ -419,7 +427,7 @@ const bulkDeleteUsers = async (req, res) => {
   
       if (!users || users.length === 0) {
         return res.status(404).json({
-          success: false,
+          isSuccess: false,
           message: "No matching users found",
         });
       }
@@ -446,18 +454,19 @@ const bulkDeleteUsers = async (req, res) => {
           { $set: profileUpdates }
         );
       }
-  
+      await logAdminActivity(req, "edit", `Users and their profiles updated successfully: ${updatedUsers.modifiedCount}`);
       return res.status(200).json({
-        success: true,
+        isSuccess: true,
         message: "Users and their profiles updated successfully",
         data: {
           updatedUsersCount: updatedUsers.modifiedCount,
           updatedProfilesCount: updatedProfiles?.modifiedCount || 0,
         },
       });
-    } catch (error) {
+    } catch (error) { 
+      await logAdminActivity(req, "edit", `Users and their profiles update failed: ${error.message}`);
       return res.status(500).json({
-        success: false,
+        isSuccess: false,
         message: "Failed to update users and profiles",
         error: error.message,
       });
@@ -468,14 +477,16 @@ const bulkDeleteUsers = async (req, res) => {
 const importUsers = async(req,res)=>{
     try {
         const users = await User.insertMany(req.body)
+        await logAdminActivity(req, "import", `Users imported successfully: ${users.length}`);
         return res.status(200).json({
-            success:true,
+            isSuccess:true,
             message:"Users imported successfully",
             data:users
         })
     } catch (error) {
+      await logAdminActivity(req, "import", `Users import failed: ${error.message}`);
         return res.status(500).json({
-            success:false,
+            isSuccess:false,
             message:"Failed to import users",
             error:error.message
         })
@@ -563,13 +574,14 @@ const exportUsers = async (req, res) => {
         // Set CSV headers for response
         res.setHeader('Content-Type', 'text/csv');
         res.setHeader('Content-Disposition', 'attachment; filename=users.csv');
-    
+        await logAdminActivity(req, "export", `Users exported successfully: ${users.length}`);
         // Send CSV content
         return res.send(header + csvRecords);
-    
+        
       } catch (error) {
+        await logAdminActivity(req, "export", `Users export failed: ${error.message}`);
         return res.status(500).json({
-          success: false,
+          isSuccess: false,
           message: "Failed to export users to CSV",
           error: error.message,
         });

@@ -12,6 +12,7 @@ const adminRouter = require("./src/routes/admin.routes");
 const devRouter = require("./src/routes/dev.routes");
 const cookieParser = require("cookie-parser");
 const { authenticate, authorize } = require("./src/middleware/auth.middleware");
+const logActivity = require("./src/middleware/adminActivity");
 //MONGODB connection
 connectDB;
 
@@ -28,6 +29,8 @@ app.use((req, res, next) => {
   logger.info(`Request Body -${JSON.stringify(req.body)}`);
   next(); //to pass into next function
 });
+// app.use(logActivity)
+
 // app.use('/api/globalAdmin',authenticate,authorize(['GlobalAdmin']),globalAdminRouter)
 app.use('/api/globalAdmin',globalAdminRouter)
 app.use('/auth',authRouter)

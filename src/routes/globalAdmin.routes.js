@@ -4,7 +4,7 @@ const {addContent, editContent, deleteContent, getContent} = require("../control
 const {createSurvey, editSurvey, deleteSurvey, getSurveys, getSurvey} = require("../controllers/globalAdmin.controller/globalAdmin_Surveys");
 const {upload,uploadContent} = require("../middleware/multer.middleware");
 const { uploadMultipleToCloudinary, uploadToCloudinary } = require("../utils/uploadOnCloud");
-const { setMessage } = require("../controllers/globalAdmin.controller/globalAdmin_message");
+const { setMessage, editMessage, deleteMessage } = require("../controllers/globalAdmin.controller/globalAdmin_message");
 // const csvStream = require("../utils/csvParser");
 
 const router = require("express").Router();
@@ -45,5 +45,7 @@ router.route('/getSurvey/:id').get(getSurvey)
 //////////MessagesforAdmin//////////
 
 router.route('/setMessage').post(setMessage)
+router.route('/editMessage/:id').put(editMessage)
+router.route('/deleteMessage/:id').delete(deleteMessage)
 
 module.exports = router;

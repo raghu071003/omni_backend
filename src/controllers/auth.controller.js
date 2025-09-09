@@ -1,6 +1,6 @@
 const { options } = require("../config/constants");
-const GlobalRoles = require("../models/globalRoles.model");
-const User = require("../models/users.model");
+const GlobalRoles = require("../models/globalRoles_model");
+const User = require("../models/users_model");
 const jwt = require("jsonwebtoken");
 
 const login = async (req,res) => {
@@ -8,7 +8,7 @@ const login = async (req,res) => {
         const {email,password} = req.body;
         if(!email || !password){
             return res.status(400).json({
-                success:false,
+                isSuccess:false,
                 message:"Email and password are required"
             })
         }
@@ -16,14 +16,14 @@ const login = async (req,res) => {
         const role = await GlobalRoles.findById(user.global_role_id).select("name");
         if(!user){
             return res.status(401).json({
-                success:false,
+                isSuccess:false,
                 message:"Invalid email or password"
             })
         }
         const isPasswordValid = await user.comparePassword(password)
         if(!isPasswordValid){
             return res.status(401).json({
-                success:false,
+                isSuccess:false,
                 message:"Invalid email or password"
             })
         }
@@ -33,14 +33,14 @@ const login = async (req,res) => {
         res.cookie("accessToken",accessToken,options);
         
         return res.status(200).json({
-            success:true,
+            isSuccess:true,
             message:"Login successful",
             data:user,
             role:role
         })
     } catch (error) {
         return res.status(500).json({
-            success:false,
+            isSuccess:false,
             message:"Failed to login",
             error:error.message
         })

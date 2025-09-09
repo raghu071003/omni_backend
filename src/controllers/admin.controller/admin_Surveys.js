@@ -1,6 +1,6 @@
 const { default: mongoose } = require("mongoose");
-const OrganizationSurveyQuestion = require("../../models/organizationSurveyQuestions.model");
-const OrganizationSurvey = require("../../models/organizationSurveys.model");
+const OrganizationSurveyQuestion = require("../../models/organizationSurveyQuestions_model");
+const OrganizationSurvey = require("../../models/organizationSurveys_model");
 
 const createSurvey = async (req, res) => {
     const session = await mongoose.startSession();
@@ -12,7 +12,7 @@ const createSurvey = async (req, res) => {
   
       if (!name || !status || !description || !questions) {
         return res.status(400).json({
-          success: false,
+          isSuccess: false,
           message: "All fields are required",
         });
       }
@@ -40,7 +40,7 @@ const createSurvey = async (req, res) => {
   
       if (validQuestions.length === 0) {
         return res.status(400).json({
-          success: false,
+          isSuccess: false,
           message: "No valid questions found",
           errors,
         });
@@ -61,9 +61,9 @@ const createSurvey = async (req, res) => {
       // Step 4: Commit transaction
       await session.commitTransaction();
       session.endSession();
-  
+      await logAdminActivity(req, "add", `Survey created successfully: ${survey.name}`);
       return res.status(201).json({
-        success: true,
+        isSuccess: true,
         message: "Survey created successfully",
         data: survey[0],
         errors: errors.length ? errors : undefined,
@@ -73,9 +73,9 @@ const createSurvey = async (req, res) => {
       // Abort transaction if any error occurs
       await session.abortTransaction();
       session.endSession();
-  
+      await logAdminActivity(req, "add", `Survey creation failed: ${error.message}`);
       return res.status(500).json({
-        success: false,
+        isSuccess: false,
         message: "Failed to create survey",
         error: error.message,
       });
@@ -90,23 +90,25 @@ const deleteSurvey = async(req,res)=>{
         const questions = await OrganizationSurveyQuestion.deleteMany({_id:{$in:survey.questions}});
         if(!questions){
             return res.status(404).json({
-                success:false,
+                isSuccess:false,
                 message:"Questions not found"
             })
         }
         if(!survey){
             return res.status(404).json({
-                success:false,
+                isSuccess:false,
                 message:"Survey not found"
             })
         }
+        await logAdminActivity(req, "delete", `Survey deleted successfully: ${survey.name}`);
         return res.status(200).json({
-            success:true,
+            isSuccess:true,
             message:"Survey deleted successfully"
         })
-    } catch (error) {
+      } catch (error) {
+        await logAdminActivity(req, "delete", `Survey deletion failed: ${error.message}`);
         return res.status(500).json({
-            success:false,
+            isSuccess:false,
             message:"Failed to delete survey",
             error:error.message
         })
@@ -119,18 +121,20 @@ const getSurveys = async(req,res)=>{
         const surveys = await OrganizationSurvey.find({organization_id})
         if(!surveys){
             return res.status(400).json({
-                success:false,
+                isSuccess:false,
                 message:"No surveys found",
             })
         }   
+        await logAdminActivity(req, "view", `Surveys fetched successfully: ${surveys.length}`);
         return res.status(200).json({
-            success:true,
+            isSuccess:true,
             message:"Surveys fetched successfully",
             data:surveys
         })
     } catch (error) {
+        await logAdminActivity(req, "view", `Surveys fetching failed: ${error.message}`);
         return res.status(500).json({
-            success:false,
+            isSuccess:false,
             message:"Failed to fetch surveys",
             error:error.message
         })
@@ -148,7 +152,7 @@ const editSurvey = async (req, res) => {
         await session.abortTransaction();
         session.endSession();
         return res.status(400).json({
-          success: false,
+          isSuccess: false,
           message: "All fields are required",
         });
       }
@@ -178,7 +182,7 @@ const editSurvey = async (req, res) => {
         await session.abortTransaction();
         session.endSession();
         return res.status(400).json({
-          success: false,
+          isSuccess: false,
           message: "No valid questions found",
           errors,
         });
@@ -190,7 +194,7 @@ const editSurvey = async (req, res) => {
         await session.abortTransaction();
         session.endSession();
         return res.status(404).json({
-          success: false,
+          isSuccess: false,
           message: "Survey not found",
         });
       }
@@ -214,9 +218,9 @@ const editSurvey = async (req, res) => {
       // Step 6: Commit transaction
       await session.commitTransaction();
       session.endSession();
-  
+      await logAdminActivity(req, "edit", `Survey edited successfully: ${survey.name}`);
       return res.status(200).json({
-        success: true,
+        isSuccess: true,
         message: "Survey updated successfully",
         data: survey,
         errors: errors.length ? errors : undefined,
@@ -224,8 +228,9 @@ const editSurvey = async (req, res) => {
     } catch (error) {
       await session.abortTransaction();
       session.endSession();
+      await logAdminActivity(req, "edit", `Survey editing failed: ${error.message}`);
       return res.status(500).json({
-        success: false,
+        isSuccess: false,
         message: "Failed to update survey",
         error: error.message,
       });

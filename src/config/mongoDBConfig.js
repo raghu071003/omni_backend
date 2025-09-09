@@ -3,8 +3,8 @@ const logger = require("../utils/logger");
 const MONGO_URL = process.env.MONGO_URL;
 
 const options = {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
+  // useNewUrlParser: true,
+  // useUnifiedTopology: true,
 
   // Connection Pooling: Maintain a pool of socket connections
   //maxPoolSize: 50, // default is 100, adjust based on your app's concurrency

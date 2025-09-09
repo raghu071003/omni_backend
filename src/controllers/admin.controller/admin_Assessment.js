@@ -1,12 +1,12 @@
-const Assessment = require("../../models/assessment.model")
-const Question = require("../../models/question.model")
+const Assessment = require("../../models/assessment_model")
+const Question = require("../../models/question_model")
 const createAssessment = async (req, res) => {
     try {
         const { title, description, questions, status, classification } = req.body;
 
         if (!title || !questions || !Array.isArray(questions) || questions.length === 0) {
             return res.status(400).json({ 
-                success: false, 
+                isSuccess: false, 
                 message: "Title and questions are required" 
             });
         }
@@ -59,16 +59,14 @@ const createAssessment = async (req, res) => {
 
         if (validQuestions.length === 0) {
             return res.status(400).json({
-                success: false,
+                isSuccess: false,
                 message: "No valid questions found",
                 errors
             });
         }
 
-        // Save valid questions
         const savedQuestions = await Question.insertMany(validQuestions, { ordered: false });
 
-        // Create assessment
         const assessment = new Assessment({
             title,
             description: description || "",
@@ -79,9 +77,9 @@ const createAssessment = async (req, res) => {
         });
 
         await assessment.save();
-
+        await logAdminActivity(req, "add", "Assessment created successfully", "success");
         res.status(201).json({
-            success: true,
+            isSuccess: true,
             message: "Assessment created successfully",
             data: assessment,
             errors // return invalid question info if any
@@ -89,19 +87,18 @@ const createAssessment = async (req, res) => {
 
     } catch (error) {
         console.error("Error creating assessment:", error);
-        res.status(500).json({ success: false, message: error.message });
+        res.status(500).json({ isSuccess: false, message: error.message });
     }
 };
 
-
-
 const csv = require("csv-parser");
 const fs = require("fs");
+const logAdminActivity = require("./admin_activity");
 
 const uploadAssessmentCSV = async (req, res) => {
     try {
         if (!req.file) {
-            return res.status(400).json({ success: false, message: "No file uploaded" });
+            return res.status(400).json({ isSuccess: false, message: "No file uploaded" });
         }
 
         const file = req.file;
@@ -120,7 +117,6 @@ const uploadAssessmentCSV = async (req, res) => {
                         errors.push({ row, reason: "Missing Type of Question or Question" });
                         return;
                     }
-
                     const options = [
                         row["Option A"],
                         row["Option B"],
@@ -176,7 +172,7 @@ const uploadAssessmentCSV = async (req, res) => {
                     if (questions.length === 0) {
                         fs.unlinkSync(file.path);
                         return res.status(400).json({
-                            success: false,
+                            isSuccess: false,
                             message: "No valid questions found in CSV",
                             errors
                         });
@@ -195,11 +191,10 @@ const uploadAssessmentCSV = async (req, res) => {
                         classification: req.body.classification,
                     });
                     await assessment.save();
-
+                    await logAdminActivity(req, "add", "Assessment created successfully", "success");
                     fs.unlinkSync(file.path);
-
                     return res.status(201).json({
-                        success: true,
+                        isSuccess: true,
                         message: "Assessment created from CSV",
                         data: assessment,
                         errors // return any skipped rows for debugging
@@ -208,7 +203,7 @@ const uploadAssessmentCSV = async (req, res) => {
                     console.error("DB save error:", dbError);
                     fs.unlinkSync(file.path);
                     return res.status(500).json({
-                        success: false,
+                        isSuccess: false,
                         message: "Error saving questions or assessment",
                         error: dbError.message,
                         errors
@@ -219,7 +214,7 @@ const uploadAssessmentCSV = async (req, res) => {
                 console.error("CSV parsing error:", csvError);
                 fs.unlinkSync(file.path);
                 return res.status(500).json({
-                    success: false,
+                    isSuccess: false,
                     message: "CSV parsing failed",
                     error: csvError.message,
                 });
@@ -227,7 +222,7 @@ const uploadAssessmentCSV = async (req, res) => {
     } catch (error) {
         console.error("CSV upload error:", error);
         if (req.file) fs.unlinkSync(req.file.path);
-        return res.status(500).json({ success: false, message: error.message });
+        return res.status(500).json({ isSuccess: false, message: error.message });
     }
 };
 
@@ -237,8 +232,9 @@ const getAssessments = async (req, res) => {
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 50;
         const assessments = await Assessment.find().skip((page - 1) * limit).limit(limit)
+        await logAdminActivity(req, "view", `Assessments fetched`, "success");
         return res.status(200).json({
-            success: true,
+            isSuccess: true,
             message: "Assessments fetched successfully",
             data: assessments,
             pagination: {
@@ -249,19 +245,22 @@ const getAssessments = async (req, res) => {
         })
     } catch (error) {
         return res.status(500).json({
-            success: false,
+            isSuccess: false,
             message: "Failed to fetch assessments",
             error: error.message
         })
     }
 }
+
+
 const getQuestions = async (req, res) => {
     try {
         const questions = await Assessment.findOne({uuid:req.params.id}).populate("questions")
         const {page = 1, limit = 50} = req.query
         const paginatedQuestions = questions.questions.slice((page - 1) * limit, page * limit)
+        await logAdminActivity(req, "view", `Questions fetched`, "success");
         return res.status(200).json({
-            success: true,
+            isSuccess: true,
             message: "Questions fetched successfully",
             data: paginatedQuestions,
             pagination: {
@@ -272,7 +271,7 @@ const getQuestions = async (req, res) => {
         })
     } catch (error) {
         return res.status(500).json({
-            success: false,
+            isSuccess: false,
             message: "Failed to fetch questions",
             error: error.message
         })
@@ -283,35 +282,39 @@ const getQuestionsRandom = async (req, res) => {
         const { noOfQuestions } = req.query
         const questions = await Assessment.findOne({uuid:req.params.id}).populate("questions")
         const randomQuestions = questions.questions.sort(() => 0.5 - Math.random()).slice(0, noOfQuestions);
+        await logAdminActivity(req, "view", `Questions fetched`, "success");
         return res.status(200).json({
-            success: true,
+            isSuccess: true,
             message: "Questions fetched successfully",
             data: randomQuestions
         })
     } catch (error) {
         return res.status(500).json({
-            success: false,
+            isSuccess: false,
             message: "Failed to fetch questions",
             error: error.message
         })
     }
 }
+
 const getAssessmentById = async (req, res) => {
     try {
         const assessment = await Assessment.findOne({uuid:req.params.id}).populate("questions")
+        await logAdminActivity(req, "view", `Assessment fetched`, "success");
         return res.status(200).json({
-            success: true,
+            isSuccess: true,
             message: "Assessment fetched successfully",
             data: assessment
         })
     } catch (error) {
         return res.status(500).json({
-            success: false,
+            isSuccess: false,
             message: "Failed to fetch assessment",
             error: error.message
         })
     }
 }
+
 const editAssessment = async (req, res) => {
     try {
         const assessment = await Assessment.findOneAndUpdate({uuid:req.params.id}, {
@@ -320,35 +323,39 @@ const editAssessment = async (req, res) => {
             status: req.body.status,
             classification: req.body.classification
         })
+        await logAdminActivity(req, "edit", `Assessment updated`, "success");
         return res.status(200).json({
-            success: true,
+            isSuccess: true,
             message: "Assessment updated successfully",
             data: assessment
         })
     } catch (error) {
         return res.status(500).json({
-            success: false,
+            isSuccess: false,
             message: "Failed to update assessment",
             error: error.message
         })
     }
 }
+
 const deleteAssessment = async (req, res) => {
     try {
         const assessment = await Assessment.findOneAndDelete({uuid:req.params.id})
+        await logAdminActivity(req, "delete", `Assessment deleted`, "success");
         return res.status(200).json({
-            success: true,
+            isSuccess: true,
             message: "Assessment deleted successfully",
             data: assessment
         })
     } catch (error) {
         return res.status(500).json({
-            success: false,
+            isSuccess: false,
             message: "Failed to delete assessment",
             error: error.message
         })
     }
 }
+
 const editQuestion = async (req, res) => {
     try {
         const question = await Question.findOneAndUpdate({uuid:req.params.id}, {
@@ -356,35 +363,39 @@ const editQuestion = async (req, res) => {
             options: req.body.options,
             correct_option: req.body.correct_option
         })
+        await logAdminActivity(req, "edit", `Question updated`, "success");
         return res.status(200).json({
-            success: true,
+            isSuccess: true,
             message: "Question updated successfully",
             data: question
         })
     } catch (error) {
         return res.status(500).json({
-            success: false,
+            isSuccess: false,
             message: "Failed to update question",
             error: error.message
         })
     }
 }
+
 const deleteQuestion = async (req, res) => {
     try {
         const question = await Question.findOneAndDelete({uuid:req.params.id})
+        await logAdminActivity(req, "delete", `Question deleted`, "success");
         return res.status(200).json({
-            success: true,
+            isSuccess: true,
             message: "Question deleted successfully",
             data: question
         })
     } catch (error) {
         return res.status(500).json({
-            success: false,
+            isSuccess: false,
             message: "Failed to delete question",
             error: error.message
         })
     }
 }
+
 
 const searchAssessment = async (req, res) => {
     try {
@@ -402,9 +413,9 @@ const searchAssessment = async (req, res) => {
         const assessments = await Assessment.find(filter)
             .skip(skip)
             .limit(limit);
-
+        await logAdminActivity(req, "view", `Assessments fetched`, "success");
         return res.status(200).json({
-            success: true,
+            isSuccess: true,
             message: "Assessments fetched successfully",
             data: assessments,
             pagination: {
@@ -418,7 +429,7 @@ const searchAssessment = async (req, res) => {
         });
     } catch (error) {
         return res.status(500).json({
-            success: false,
+            isSuccess: false,
             message: "Failed to fetch assessments",
             error: error.message,
         });

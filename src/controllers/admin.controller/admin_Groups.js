@@ -1,13 +1,13 @@
 
-const Team = require("../../models/teams.model");
-const SubTeam = require("../../models/subTeams.model");
+const Team = require("../../models/teams_model");
+const SubTeam = require("../../models/subTeams_model");
 
 const addGroup = async (req, res) => {
     try {
         const { teamName, subTeamName, description, subTeamDescription } = req.body;
         if (!teamName || !subTeamName || !description || !subTeamDescription) {
             return res.status(400).json({
-                success: false,
+                isSuccess: false,
                 message: "All fields are required"
             })
         }
@@ -27,14 +27,14 @@ const addGroup = async (req, res) => {
             created_by: "68b84267efd625b8496763f8"
         })
         return res.status(201).json({
-            success: true,
+            isSuccess: true,
             message: "Group added successfully",
             data: { team, subTeam }
         })
 
     } catch (error) {
         return res.status(500).json({
-            success: false,
+            isSuccess: false,
             message: "Failed to add group",
             error: error.message
         })
@@ -58,13 +58,13 @@ const getGroups = async (req, res) => {
       });
   
       return res.status(200).json({
-        success: true,
+        isSuccess: true,
         message: "Groups fetched successfully",
         data: groups
       });
     } catch (error) {
       return res.status(500).json({
-        success: false,
+        isSuccess: false,
         message: "Failed to fetch groups",
         error: error.message
       });
@@ -78,13 +78,13 @@ const getGroups = async (req, res) => {
 
       const subTeam = await SubTeam.findOneAndUpdate({team_id:req.params.id}, { name: subTeamName, description:subTeamDescription });
       return res.status(200).json({
-        success: true,
+        isSuccess: true,
         message: "Group updated successfully",
         data: { team, subTeam }
       });
     } catch (error) {
       return res.status(500).json({
-        success: false,
+        isSuccess: false,
         message: "Failed to update group",
         error: error.message
       });
@@ -95,13 +95,13 @@ const getGroups = async (req, res) => {
       const group = await Team.findByIdAndDelete(req.params.id);
       const subGroup = await SubTeam.findOneAndDelete({team_id:req.params.id});
       return res.status(200).json({
-        success: true,
+        isSuccess: true,
         message: "Group deleted successfully",
         data: { group, subGroup }
       });
     } catch (error) {
       return res.status(500).json({
-        success: false,
+        isSuccess: false,
         message: "Failed to delete group",
         error: error.message
       });

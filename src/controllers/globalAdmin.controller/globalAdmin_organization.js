@@ -1,5 +1,5 @@
-const Organization = require("../../models/organization.model");
-const Plan = require("../../models/plans.model");
+const Organization = require("../../models/organization_model");
+const Plan = require("../../models/plans_model");
 
 const addOrganization = async (req, res) => {
     try {
@@ -14,14 +14,14 @@ const addOrganization = async (req, res) => {
   
       if (!name || !email || !status || !start_date || !end_date || !planId) {
         return res.status(400).json({
-          success: false,
+          isSuccess: false,
           message: "All fields are required",
         });
       }
       const plan = await Plan.findById(planId)
       if(!plan){
         return res.status(404).json({
-          success: false,
+          isSuccess: false,
           message: "Plan not found",
         });
       }
@@ -47,14 +47,14 @@ const addOrganization = async (req, res) => {
   
   
         return res.status(201).json({
-        success: true,
+        isSuccess: true,
         message: "Organization added successfully",
         data: newOrg[0],
       });
     } catch (error) {
       console.error(error);
       return res.status(500).json({
-        success: false,
+        isSuccess: false,
         message: "Failed to add organization",
         error: error.message,
       });
@@ -83,7 +83,7 @@ const editOrganization = async (req, res) => {
         const plan = await Plan.findById(planId)
         if(!plan){
             return res.status(404).json({
-                success:false,
+                isSuccess:false,
                 message:"Plan not found"
             })
         }
@@ -100,13 +100,13 @@ const editOrganization = async (req, res) => {
             planId:generatePlanId(name, plan.name),
         })
         return res.status(200).json({
-            success:true,
+            isSuccess:true,
             message:"Organization updated successfully",
             data:updatedOrg
         })
     } catch (error) {
         return res.status(500).json({
-            success:false,
+            isSuccess:false,
             message:"Failed to update organization",
             error:error.message
         })
@@ -117,13 +117,13 @@ const deleteOrganization = async (req, res) => {
     try {
         const deletedOrg = await Organization.findOneAndDelete({uuid:req.params.id})
         return res.status(200).json({
-            success:true,
+            isSuccess:true,
             message:"Organization deleted successfully",
             data:deletedOrg
         })
     } catch (error) {
         return res.status(500).json({
-            success:false,
+            isSuccess:false,
             message:"Failed to delete organization",
             error:error.message
         })
@@ -163,7 +163,7 @@ const getOrganizations = async (req, res) => {
       const total = await Organization.countDocuments(filter);
   
       return res.status(200).json({
-        success: true,
+        isSuccess: true,
         message: "Organizations fetched successfully",
         data: organizations,
         pagination: {
@@ -177,7 +177,7 @@ const getOrganizations = async (req, res) => {
   
     } catch (error) {
       return res.status(500).json({
-        success: false,
+        isSuccess: false,
         message: "Failed to fetch organizations",
         error: error.message
       });
