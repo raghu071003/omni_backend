@@ -2,7 +2,7 @@ const {addOrganization, editOrganization, deleteOrganization, getOrganizations} 
 const {addRole, editRole, deleteRole, getRoles} = require("../controllers/globalAdmin.controller/globalAdmin_Roles");
 const {addContent, editContent, deleteContent, getContent} = require("../controllers/globalAdmin.controller/globalAdmin_content");
 const {createSurvey, editSurvey, deleteSurvey, getSurveys, getSurvey} = require("../controllers/globalAdmin.controller/globalAdmin_Surveys");
-const {upload,uploadContent} = require("../middleware/multer.middleware");
+const {upload,uploadContent} = require("../middleware/multer_middleware");
 const { uploadMultipleToCloudinary, uploadToCloudinary } = require("../utils/uploadOnCloud");
 const { setMessage, editMessage, deleteMessage } = require("../controllers/globalAdmin.controller/globalAdmin_message");
 // const csvStream = require("../utils/csvParser");

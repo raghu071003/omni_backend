@@ -1,60 +1,51 @@
 const mongoose = require("mongoose");
 const { v4: uuidv4 } = require("uuid");
-
 const assignmentSchema = new mongoose.Schema(
   {
     uuid: {
       type: String,
       default: uuidv4,
       unique: true,
-      index:true
+      index: true,
     },
+
     organization_id: {
-      type: String,
-      required: true,
+      type: mongoose.Schema.Types.ObjectId,
       ref: "Organization",
+      required: true,
     },
-    module_type: {
+
+    assign_type: {
       type: String,
       required: true,
-      enum: ["module", "assessment", "survey", "learning_path"],
+      enum: ["Module", "Assessment", "Survey", "LearningPath"]
     },
-    module_id: {
-      type: String,
+
+    assign_id: {
+      type: mongoose.Schema.Types.ObjectId,
       required: true,
+      refPath: "assign_type", // <-- dynamic reference
     },
-    name: {
-      type: String,
-      required: true,
-      trim: true,
+    assigned_users:{
+      type: [mongoose.Schema.Types.ObjectId],
+      default: [],
+      ref:"User"
     },
-    assign_on: {
-      type: Date,
-      required: true,
-    },
-    due_date: {
-      type: Date,
-      required: true,
-    },
-    notify_users: {
-      type: Boolean,
-      default: true,
-    },
-    recurssive: {  
-      type: Boolean,
-      default: false,
-    },
+    name: { type: String, required: true, trim: true },
+    assign_on: { type: Date, default: Date.now },
+    due_date: { type: Date, required: true },
+    notify_users: { type: Boolean, default: true },
+    recursive: { type: Boolean, default: false },
+
     created_by: {
-      type: String,
-      required: true,
+      type: mongoose.Schema.Types.ObjectId,
       ref: "User",
+      required: true,
     },
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
 
 const ForUserAssignment = mongoose.model("ForUserAssignment", assignmentSchema);
 
-module.exports = ForUserAssignment;
+module.exports=ForUserAssignment

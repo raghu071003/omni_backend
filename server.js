@@ -10,8 +10,9 @@ const globalAdminRouter = require("./src/routes/globalAdmin.routes");
 const authRouter = require("./src/routes/auth.routes");
 const adminRouter = require("./src/routes/admin.routes");
 const devRouter = require("./src/routes/dev.routes");
+const userRouter = require("./src/routes/user.routes");
 const cookieParser = require("cookie-parser");
-const { authenticate, authorize } = require("./src/middleware/auth.middleware");
+const { authenticate, authorize } = require("./src/middleware/auth_middleware");
 const logActivity = require("./src/middleware/adminActivity");
 //MONGODB connection
 connectDB;
@@ -37,6 +38,7 @@ app.use('/auth',authRouter)
 // app.use('/api/admin',authenticate,authorize(['Admin']),adminRouter)
 app.use('/api/admin',adminRouter)
 app.use('/dev',devRouter)
+app.use('/api/user',userRouter)
 app.listen(PORT, () => {
   console.log(`Server is running at PORT:${PORT}`);
 });

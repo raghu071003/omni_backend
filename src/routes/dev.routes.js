@@ -1,4 +1,4 @@
-const { addGlobalAdmin } = require("../controllers/dev.controller");
+const { addGlobalAdmin } = require("../controllers/dev_controller");
 
 const router = require("express").Router();
 

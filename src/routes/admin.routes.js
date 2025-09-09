@@ -2,7 +2,7 @@ const {createAssessment, uploadAssessmentCSV, getQuestions, getAssessmentById, g
 const {addUser,editUser,deleteUser,getUsers,getUserbyId, bulkDeleteUsers, bulkEditUsers, exportUsers,} = require("../controllers/admin.controller/admin_User");
 const {addModule,editModule,deleteModule,previewModule,searchModules} = require("../controllers/admin.controller/admin_Module");
 const { addOrgRole, editOrgRole, deleteOrgRole, getOrgRoles } = require("../controllers/admin.controller/admin_Role");
-const { uploadAssessment, uploadContent } = require("../middleware/multer.middleware");
+const { uploadAssessment, uploadContent } = require("../middleware/multer_middleware");
 const { uploadToCloudinary, uploadMultipleToCloudinary } = require("../utils/uploadOnCloud");
 const Department = require("../models/departments_model");
 const { addGroup, getGroups, editGroup, deleteGroup } = require("../controllers/admin.controller/admin_Groups");
@@ -11,6 +11,8 @@ const { createSurvey, deleteSurvey, getSurveys, editSurvey } = require("../contr
 const { setMessage, editMessage, deleteMessage } = require("../controllers/admin.controller/admin_message");
 const { getActivities } = require("../controllers/admin.controller/admin_activity");
 const { addUserId } = require("../middleware/dummyAuth");
+const { getProfile } = require("../controllers/admin.controller/admin_profile");
+const { createAssignment, getAssignments, editAssignment, deleteAssignment, getAssignment } = require("../controllers/admin.controller/admin_Assignment");
 
 const router = require("express").Router();
 
@@ -81,10 +83,20 @@ router.route('/setMessage').post(addUserId,setMessage)
 router.route('/editMessage/:id').put(addUserId,editMessage)
 router.route('/deleteMessage/:id').delete(addUserId,deleteMessage)
 
-
+//////Assignment////////
+router.route('/createAssignment').post(addUserId,createAssignment)
+router.route('/getAssignments').get(addUserId,getAssignments)
+router.route('/getAssignment/:id').get(addUserId,getAssignment)
+router.route('/editAssignment/:id').put(addUserId,editAssignment)
+router.route('/deleteAssignment/:id').delete(addUserId,deleteAssignment)
 
 /////Activity Log /////
 
 // router.route('/getActivities').get(getActivities)
+
+
+//////Profile//////
+router.route('/getProfile').get(addUserId,getProfile)
+
 
 module.exports = router;
