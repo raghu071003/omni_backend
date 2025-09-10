@@ -31,7 +31,6 @@ const login = async (req,res) => {
         await user.save();
         user.password = undefined;
         const {accessToken,refreshToken} = await generateTokens(user._id,role.name) 
-        // console.log(accessToken,refreshToken)
         res.cookie("refreshToken",refreshToken,options);
         res.cookie("accessToken",accessToken,options);
         
@@ -73,16 +72,12 @@ const logout = async(req,res)=>{
 }
 
 const generateTokens = async (userId,role) => {
-    // console.log(process.env.ACCESS_TOKEN_SECRET)
-    // console.log(userId)
-    // console.log(role)
     const accessToken = jwt.sign({_id:userId,role:role},process.env.ACCESS_TOKEN_SECRET,{
         expiresIn:"15m"
     })
     const refreshToken = jwt.sign({_id:userId,role:role},process.env.REFRESH_TOKEN_SECRET,{
         expiresIn:"7d"
     })
-    // console.log(accessToken,refreshToken)
     return {accessToken,refreshToken}
 }
 

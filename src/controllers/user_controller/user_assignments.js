@@ -19,8 +19,6 @@ const getUserAssignments = async (req, res) => {
     const assignments = await ForUserAssignment.find(query)
       .populate("organization_id", "name logo_url") // show org info
       .populate("created_by", "name email") // who created
-      // optional: dynamically populate based on assign_type
-      // .populate("assign_id") 
       .lean();
 
     return res.status(200).json({
